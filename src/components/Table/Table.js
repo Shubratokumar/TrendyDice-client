@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Button,Box, FormControl, Select, MenuItem,ToggleButton,  styled} from '@mui/material';
 import "../../styles/table.css";
 import axios  from "axios";
-// import { useQuery } from 'react-query';
 
 const ActionBtn = styled(Button)`
     border: 1px solid white;
@@ -21,9 +20,22 @@ const PaginationWrapper = styled(Box)`
   margin: 10px;
   padding: 10px 15px;
 `;
+const InputWrapper = styled(Box)`
+  display: flex;
+  justify-content: end;
+  align-items: center;
+  margin: 10px 30px;
+  padding: 10px 15px;
+  & > input {
+    width: 300px;
+    padding: 10px 15px;
+    font-size : 18px;
+  }
+`;
 const BtnWrapper = styled(ToggleButton)`
     margin: 3px;
-`
+`;
+
 
 const Table = () => {
   const [studentsData, setStudentsData] = useState([]);
@@ -31,20 +43,15 @@ const Table = () => {
   const [ pageNumber, setPageNumber ] = useState(0);
   const [ totalPage, setTotalPage ] = useState(0);
   const [selected, setSelected] = useState(false);
+  const [ query, setQuery ] = useState(""); 
 
 
-  /* const {
-    data : studentsData,
-    refetch,
-    } =  useQuery("student", () =>
-    fetch(`http://localhost:5000/student?limit=10`).then((res) => res.json())
-    );  */
+  
   useEffect(() => {    
     ( async () => {
-        const { data } = await axios.get(`http://localhost:5000/student?limit=${limit}&pageNumber=${pageNumber}`);
+        const { data } = await axios.get(`https://shrouded-savannah-90405.herokuapp.com/student?limit=${limit}&pageNumber=${pageNumber}`);
         setStudentsData(data?.data);
         setTotalPage(data?.count/limit);
-
       })() 
   }, [limit, pageNumber]);
   
@@ -65,10 +72,26 @@ const Table = () => {
           console.log("Student payment data updated.");
         }
       });
+  };
+
+  const keys = [ "first_name", "last_name", "email_id"]
+
+  const FilteredStudents = (data) => {
+    return data.filter((item)=> 
+      keys.some(key => item[key].toLowerCase().includes(query)) 
+    )
   }
 
   return (
     <>
+      <InputWrapper>
+        <input 
+          type="text"  
+          placeholder="Search students here ..."
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </InputWrapper>
+
       <table >
         <thead>
             <tr>
@@ -82,7 +105,7 @@ const Table = () => {
         </thead>
         <tbody >
           {
-              studentsData?.map((studentData, index) => (
+              FilteredStudents(studentsData)?.map((studentData, index) => (
                 <>
                     <tr >
                         <td>{ index + 1 }</td>
@@ -117,7 +140,7 @@ const Table = () => {
                 </BtnWrapper>
           )})
         }
-            <Box sx={{ minWidth: 120 }}>
+          <Box sx={{ minWidth: 120 }}>
             <FormControl fullWidth>
               <Select  
                 value={limit}
